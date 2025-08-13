@@ -21,64 +21,79 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
   const [qrLoaded, setQrLoaded] = useState(false);
-  const qrData = generateQRData(meeting.id, meeting.title);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
 
-  // Generate QR Code menggunakan canvas dan algoritma sederhana
+  // Generate QR Code using QR Server API
   const generateQRCode = () => {
     if (!qrRef.current) return;
 
-    // Clear previous QR
-    qrRef.current.innerHTML = "";
+    try {
+      // Create QR code data
+      const qrData = JSON.stringify({
+        meetingId: meeting.id,
+        meetingTitle: meeting.title,
+        timestamp: new Date().toISOString(),
+        version: "1.0",
+      });
 
-    // Create a simple QR-like grid display
-    const container = document.createElement("div");
-    container.className = "bg-white p-4 rounded-lg border";
-    container.style.width = "256px";
-    container.style.height = "256px";
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.alignItems = "center";
-    container.style.justifyContent = "center";
-    container.style.fontSize = "12px";
-    container.style.textAlign = "center";
-    container.style.lineHeight = "1.4";
+      // Encode data for URL
+      const encodedData = encodeURIComponent(qrData);
 
-    // Simple QR representation
-    const qrGrid = document.createElement("div");
-    qrGrid.style.display = "grid";
-    qrGrid.style.gridTemplateColumns = "repeat(8, 1fr)";
-    qrGrid.style.gap = "2px";
-    qrGrid.style.marginBottom = "10px";
-    qrGrid.style.width = "120px";
-    qrGrid.style.height = "120px";
+      // Generate QR code URL using qr-server.com API
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&data=${encodedData}&format=png&margin=10`;
 
-    // Create simple pattern based on meeting ID
-    const pattern = meeting.id
-      .split("")
-      .map((char, i) => char.charCodeAt(0) % 2);
+      // Clear previous content
+      qrRef.current.innerHTML = "";
 
-    for (let i = 0; i < 64; i++) {
-      const cell = document.createElement("div");
-      cell.style.backgroundColor = pattern[i % pattern.length]
-        ? "#000"
-        : "#fff";
-      cell.style.border = "1px solid #ddd";
-      qrGrid.appendChild(cell);
+      // Create image element
+      const qrImage = document.createElement("img");
+      qrImage.src = qrUrl;
+      qrImage.alt = "QR Code";
+      qrImage.style.width = "256px";
+      qrImage.style.height = "256px";
+      qrImage.style.border = "1px solid #e5e7eb";
+      qrImage.style.borderRadius = "8px";
+      qrImage.style.backgroundColor = "white";
+
+      qrImage.onload = () => {
+        setQrLoaded(true);
+        setQrDataUrl(qrUrl);
+      };
+
+      qrImage.onerror = () => {
+        // Fallback if API fails
+        if (qrRef.current) {
+          qrRef.current.innerHTML = `
+            <div style="width: 256px; height: 256px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; background: #f9f9f9; border-radius: 8px;">
+              <div style="text-align: center; padding: 20px;">
+                <div style="font-size: 48px; margin-bottom: 10px;">📱</div>
+                <div style="font-size: 14px; color: #666; margin-bottom: 5px;">QR Code</div>
+                <div style="font-size: 12px; color: #999; word-break: break-all;">${meeting.id}</div>
+              </div>
+            </div>
+          `;
+        }
+        setQrLoaded(true);
+      };
+
+      qrRef.current.appendChild(qrImage);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+
+      // Fallback display
+      if (qrRef.current) {
+        qrRef.current.innerHTML = `
+          <div style="width: 256px; height: 256px; display: flex; align-items: center; justify-content: center; border: 2px dashed #ccc; background: #f9f9f9; border-radius: 8px;">
+            <div style="text-align: center; padding: 20px;">
+              <div style="font-size: 48px; margin-bottom: 10px;">📱</div>
+              <div style="font-size: 14px; color: #666; margin-bottom: 5px;">QR Code</div>
+              <div style="font-size: 12px; color: #999; word-break: break-all;">${meeting.id}</div>
+            </div>
+          </div>
+        `;
+      }
+      setQrLoaded(true);
     }
-
-    container.appendChild(qrGrid);
-
-    // Add text info
-    const textInfo = document.createElement("div");
-    textInfo.innerHTML = `
-      <div style="font-weight: bold; margin-bottom: 5px;">QR Code Meeting</div>
-      <div style="color: #666;">ID: ${meeting.id}</div>
-      <div style="color: #666; margin-top: 5px;">${meeting.title}</div>
-    `;
-    container.appendChild(textInfo);
-
-    qrRef.current.appendChild(container);
-    setQrLoaded(true);
   };
 
   useEffect(() => {
@@ -86,63 +101,33 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
   }, [meeting.id, meeting.title]);
 
   const downloadQR = () => {
-    // Create a canvas for download
-    const canvas = document.createElement("canvas");
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!qrDataUrl) return;
 
-    canvas.width = 400;
-    canvas.height = 400;
+    try {
+      // Create higher resolution QR for download
+      const qrData = JSON.stringify({
+        meetingId: meeting.id,
+        meetingTitle: meeting.title,
+        timestamp: new Date().toISOString(),
+        version: "1.0",
+      });
 
-    // White background
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, 400, 400);
+      const encodedData = encodeURIComponent(qrData);
+      const downloadUrl = `https://api.qrserver.com/v1/create-qr-code/?size=512x512&data=${encodedData}&format=png&margin=20`;
 
-    // Draw simple pattern
-    const cellSize = 20;
-    const startX = 50;
-    const startY = 50;
-    const pattern = meeting.id
-      .split("")
-      .map((char, i) => char.charCodeAt(0) % 2);
+      // Create temporary link for download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `qr_${meeting.title.replace(/[^a-zA-Z0-9]/g, "_")}.png`;
+      link.target = "_blank";
 
-    for (let row = 0; row < 15; row++) {
-      for (let col = 0; col < 15; col++) {
-        const index = (row * 15 + col) % pattern.length;
-        ctx.fillStyle = pattern[index] ? "#000" : "#fff";
-        if (pattern[index]) {
-          ctx.fillRect(
-            startX + col * cellSize,
-            startY + row * cellSize,
-            cellSize,
-            cellSize
-          );
-        }
-
-        // Border
-        ctx.strokeStyle = "#ddd";
-        ctx.strokeRect(
-          startX + col * cellSize,
-          startY + row * cellSize,
-          cellSize,
-          cellSize
-        );
-      }
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error downloading QR code:", error);
     }
-
-    // Add text
-    ctx.fillStyle = "#000";
-    ctx.font = "16px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("QR Code Meeting", 200, 380);
-    ctx.font = "12px Arial";
-    ctx.fillText(`ID: ${meeting.id}`, 200, 395);
-
-    // Download
-    const link = document.createElement("a");
-    link.download = `qr_${meeting.title.replace(/\s+/g, "_")}.png`;
-    link.href = canvas.toDataURL();
-    link.click();
   };
 
   return (
@@ -165,7 +150,13 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
           ref={qrRef}
           className="flex items-center justify-center"
           style={{ minHeight: "256px", minWidth: "256px" }}
-        />
+        >
+          {/* Loading placeholder */}
+          <div
+            className="animate-pulse bg-gray-200 rounded-lg"
+            style={{ width: "256px", height: "256px" }}
+          ></div>
+        </div>
 
         <div className="text-center space-y-2">
           <h3 className="font-semibold text-sm sm:text-base">
@@ -215,6 +206,9 @@ const QRCodeComponent: React.FC<QRCodeComponentProps> = ({
         <div className="bg-muted/50 rounded-lg p-3 w-full">
           <p className="text-xs text-center text-muted-foreground">
             Arahkan kamera ke QR code untuk melakukan absensi
+          </p>
+          <p className="text-xs text-center text-muted-foreground mt-1">
+            Meeting ID: {meeting.id}
           </p>
         </div>
       </CardContent>

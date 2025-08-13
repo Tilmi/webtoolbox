@@ -180,7 +180,7 @@ export default function TeamsPage() {
               className="rounded-lg bg-blue-500/30 border-1 border-blue-500/50 p-2 text-blue-500 shadow-lg"
             />
             <div className="flex flex-col gap-1">
-              <CardTitle>Total Member</CardTitle>
+              <CardTitle>Total</CardTitle>
               <div className="flex flex-row items-center gap-2">
                 <p className="text-2xl font-bold">5</p>
                 <p className="text-sm text-muted-foreground">Member</p>
