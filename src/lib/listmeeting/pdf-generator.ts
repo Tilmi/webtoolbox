@@ -1,5 +1,5 @@
 import jsPDF from "jspdf";
-import { Meeting, PDFExportOptions } from "./types";
+import { Meeting, PDFExportOptions } from "../listmeeting/types";
 import { format } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 

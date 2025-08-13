@@ -12,7 +12,7 @@ export interface Meeting {
   chairperson: string;
   secretary: string;
   status: "scheduled" | "ongoing" | "completed" | "cancelled";
-  notes?: string; // Added notes field
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -54,5 +54,5 @@ export interface PDFExportOptions {
   includeActionItems: boolean;
   includeAttendees: boolean;
   includeSignatures: boolean;
-  includeNotes: boolean; // Added notes export option
+  includeNotes: boolean;
 }
