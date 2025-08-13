@@ -5,6 +5,10 @@ import Attendance from "@/components/Attendance";
 import { TaskChart } from "@/components/analytic/TaskChart";
 
 import { MeetingAttendanceChart } from "@/components/analytic/MeetingAttendanceChart";
+import Productivity from "@/components/analytic/Productivity";
+
+import TeamRadarChart from "@/components/analytic/TeamRadar";
+import MeetingEfficiencyChart from "@/components/analytic/MeetingEfficient";
 
 export default function AnalyticPage() {
   return (
@@ -29,6 +33,15 @@ export default function AnalyticPage() {
 
           <div className="lg:col-span-2 md:col-span-2 sm:col-span-1">
             <MeetingAttendanceChart />
+          </div>
+          <div className="lg:col-span-2 md:col-span-2 sm:col-span-1">
+            <Productivity />
+          </div>
+          <div className="lg:col-span-2 md:col-span-2 sm:col-span-1">
+            <TeamRadarChart />
+          </div>
+          <div className="lg:col-span-2 md:col-span-2 sm:col-span-1">
+            <MeetingEfficiencyChart />
           </div>
         </div>
       </main>
